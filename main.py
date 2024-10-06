@@ -27,7 +27,6 @@ async def get_upcoming_events(days=100):
     schedule_string = ""
     req = requests.get(calendar_link)
     if req.status_code == 200:
-        # print(req.text)
         gcal = Calendar.from_ical(req.text)
         current_time = datetime.now(pytz.utc)
         end_time = current_time + timedelta(days=days)
@@ -44,7 +43,6 @@ async def get_upcoming_events(days=100):
                     link_start = event_description.find("Join the meeting now<") + 20
                     link_end = event_description.find("Meeting ID:") - 1
                 event_link = event_description[link_start:link_end]
-                # print(f"event_link {event_link}")
 
                 dtstart = component.get('dtstart').dt
                 dtend = component.get('dtend').dt
@@ -56,22 +54,13 @@ async def get_upcoming_events(days=100):
                     dtend = datetime.combine(dtend, datetime.min.time(), tzinfo=pytz.timezone("CET"))
                 if current_time < dtstart < end_time:
                     event_name = component.get('summary')
-                    # print(f"Time: {dtstart}")
-                    # print(f"Name: {summary}")
-                    # print(f"Link: {event_link}")
-                    # print(f"Event: {summary}")
-                    # print(f"Starts: {dtstart.isoformat()}")
                     event_date = dtstart.strftime("%Y-%m-%d")
                     event_start = dtstart.strftime("%H:%M")
                     event_end = dtend.strftime("%H:%M")
-                    # print(f"{event_date} {event_start}-{event_end} \n")
-                    # test = input("stop")
                     schedule_string +=  f"{event_date} {event_start}-{event_end} \n"
                     schedule_string += event_name + "\n"
                     schedule_string += f"[Meeting link]({event_link})"
-                    # schedule_string += event_name + "\n"
                     schedule_string += "\n\n"
-                    # print(f"schedelu length: {len(schedule_string)}")
                     if(len(schedule_string) > 1700):
                         schedule_string += f'(Last update: {now_str})'
                         return schedule_string
@@ -80,18 +69,15 @@ async def get_upcoming_events(days=100):
         return schedule_string
 
     else:
-        return None
         print('Failed to fetch the calendar data')
-
-# get_upcoming_events(calendar_link)
+        return None
 
 @ client.event
 async def on_ready():
     channel = client.get_channel(int(channel_id))
     last_message_id = await get_last_message(channel)
-    # await post_schedule(last_message_id, channel)
+    await post_schedule(last_message_id, channel)
     my_daily_task.start()
-    print(f"Last message: {last_message_id}")
 
 async def get_last_message(channel):
     if channel:
@@ -102,11 +88,6 @@ async def get_last_message(channel):
             return None
     else:
         return None
-
-# async def get_schedule_string():
-#     schedule_string = ""
-
-#     return schedule_string
 
 async def post_schedule(last_message_id, channel):
     if not last_message_id:
@@ -128,7 +109,6 @@ async def create_message(channel):
 
 @tasks.loop(hours=24)
 async def my_daily_task():
-    print("trying to start my_daily_task?")
     channel = client.get_channel(channel_id)
     last_message_id = await get_last_message(channel)
     await post_schedule(last_message_id, channel)
