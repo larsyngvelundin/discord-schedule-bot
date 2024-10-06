@@ -128,7 +128,7 @@ async def create_message(channel):
 
 @tasks.loop(hours=24)
 async def my_daily_task():
-    # print("trying to start my_daily_task?")
+    print("trying to start my_daily_task?")
     channel = client.get_channel(channel_id)
     last_message_id = await get_last_message(channel)
     await post_schedule(last_message_id, channel)
