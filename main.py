@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 calendar_link = os.environ['CALENDARLINK']
 discord_key = os.environ['DISCORD']
+desired_timezone = pytz.timezone('Europe/Stockholm')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -26,11 +27,10 @@ async def get_upcoming_events(days=100):
     schedule_string = ""
     req = requests.get(calendar_link)
     if req.status_code == 200:
-        print(req.text)
+        # print(req.text)
         gcal = Calendar.from_ical(req.text)
         current_time = datetime.now(pytz.utc)
         end_time = current_time + timedelta(days=days)
-        desired_timezone = pytz.timezone('Europe/Stockholm')
         now_str = datetime.now(desired_timezone).strftime("%Y-%m-%d %H:%M")
         schedule_string += f'\n\n'
         for component in gcal.walk():
@@ -71,7 +71,7 @@ async def get_upcoming_events(days=100):
                     schedule_string += f"[Meeting link]({event_link})"
                     # schedule_string += event_name + "\n"
                     schedule_string += "\n\n"
-                    print(f"schedelu length: {len(schedule_string)}")
+                    # print(f"schedelu length: {len(schedule_string)}")
                     if(len(schedule_string) > 1700):
                         schedule_string += f'(Last update: {now_str})'
                         return schedule_string
@@ -89,7 +89,7 @@ async def get_upcoming_events(days=100):
 async def on_ready():
     channel = client.get_channel(int(channel_id))
     last_message_id = await get_last_message(channel)
-    await post_schedule(last_message_id, channel)
+    # await post_schedule(last_message_id, channel)
     my_daily_task.start()
     print(f"Last message: {last_message_id}")
 
@@ -138,11 +138,12 @@ async def before_my_daily_task():
     hour = 1
     minute = 0
     await client.wait_until_ready()
-    now = datetime.datetime.now()
-    future = datetime.datetime.now().replace(hour=hour, minute=minute)
+    now = datetime.datetime.now(desired_timezone)
+    future = datetime.datetime.now(desired_timezone).replace(hour=hour, minute=minute)
     if now.hour >= hour and now.minute > minute:
         future += datetime.timedelta(days=1)
-    # seconds_until_target = (future - now).total_seconds()
+    seconds_until_target = (future - now).total_seconds()
+    print(f"Waiting {seconds_until_target} for next update")
     await discord.utils.sleep_until(future)
 
 client.run(discord_key)
