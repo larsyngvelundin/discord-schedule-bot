@@ -138,10 +138,10 @@ async def before_my_daily_task():
     hour = 1
     minute = 0
     await client.wait_until_ready()
-    now = datetime.datetime.now(desired_timezone)
-    future = datetime.datetime.now(desired_timezone).replace(hour=hour, minute=minute)
+    now = datetime.now(desired_timezone)
+    future = datetime.now(desired_timezone).replace(hour=hour, minute=minute)
     if now.hour >= hour and now.minute > minute:
-        future += datetime.timedelta(days=1)
+        future += timedelta(days=1)
     seconds_until_target = (future - now).total_seconds()
     print(f"Waiting {seconds_until_target} for next update")
     await discord.utils.sleep_until(future)
