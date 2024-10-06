@@ -30,13 +30,11 @@ async def get_upcoming_events(days=100):
         gcal = Calendar.from_ical(req.text)
         current_time = datetime.now(pytz.utc)
         end_time = current_time + timedelta(days=days)
-
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        desired_timezone = pytz.timezone('Europe/Stockholm')
+        now_str = datetime.now(desired_timezone).strftime("%Y-%m-%d %H:%M")
         schedule_string += f'\n\n'
         for component in gcal.walk():
             if component.name == "VEVENT":
-                # print(component)
-                # print(component.get('DESCRIPTION'))
 
                 event_description = component.get('DESCRIPTION')
                 if event_description.find("Mötes-") != -1:
@@ -92,6 +90,7 @@ async def on_ready():
     channel = client.get_channel(int(channel_id))
     last_message_id = await get_last_message(channel)
     await post_schedule(last_message_id, channel)
+    my_daily_task.start()
     print(f"Last message: {last_message_id}")
 
 async def get_last_message(channel):
@@ -126,5 +125,24 @@ async def create_message(channel):
         print("sleeping 2 seconds and trying again")
         sleep(2)
         await create_message(channel)
+
+@tasks.loop(hours=24)
+async def my_daily_task():
+    # print("trying to start my_daily_task?")
+    channel = client.get_channel(channel_id)
+    last_message_id = await get_last_message(channel)
+    await post_schedule(last_message_id, channel)
+
+@my_daily_task.before_loop
+async def before_my_daily_task():
+    hour = 1
+    minute = 0
+    await client.wait_until_ready()
+    now = datetime.datetime.now()
+    future = datetime.datetime.now().replace(hour=hour, minute=minute)
+    if now.hour >= hour and now.minute > minute:
+        future += datetime.timedelta(days=1)
+    # seconds_until_target = (future - now).total_seconds()
+    await discord.utils.sleep_until(future)
 
 client.run(discord_key)
