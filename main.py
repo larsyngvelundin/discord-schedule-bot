@@ -57,11 +57,13 @@ async def get_upcoming_events(days=100):
                     event_date = dtstart.strftime("%Y-%m-%d")
                     event_start = dtstart.strftime("%H:%M")
                     event_end = dtend.strftime("%H:%M")
+                    prev_schedule_string = schedule_string
                     schedule_string +=  f"{event_date} {event_start}-{event_end} \n"
                     schedule_string += event_name + "\n"
                     schedule_string += f"[Meeting link]({event_link})"
                     schedule_string += "\n\n"
-                    if(len(schedule_string) > 1700):
+                    if(len(schedule_string) > 1966):
+                        schedule_string = prev_schedule_string
                         schedule_string += f'(Last update: {now_str})'
                         return schedule_string
 
