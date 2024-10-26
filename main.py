@@ -64,7 +64,7 @@ async def get_upcoming_events(days=100):
                     if(len(schedule_string) > 1700):
                         schedule_string += f'(Last update: {now_str})'
                         return schedule_string
-        
+
         schedule_string += f'(Last update: {now_str})'
         return schedule_string
 
